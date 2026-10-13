@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="cs" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VŠ Rozvrhář — Plánovač a porovnávač variant rozvrhu</title>
+  <meta name="description" content="Moderní plánovač a srovnávač variant vysokoškolských rozvrhů s detekcí kolizí a exportem do kalendáře.">
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Horní navigační lišta -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+            <path d="M8 14h.01"></path>
+            <path d="M12 14h.01"></path>
+            <path d="M16 14h.01"></path>
+            <path d="M8 18h.01"></path>
+            <path d="M12 18h.01"></path>
+            <path d="M16 18h.01"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">VŠ Rozvrhář</h1>
+          <span class="brand-subtitle">Plánovač &amp; porovnávač variant</span>
+        </div>
+      </div>
+
+      <!-- Akční tlačítka v záhlaví -->
+      <div class="header-actions">
+        <!-- Tlačítko porovnání -->
+        <button id="btnToggleCompare" class="btn btn-secondary btn-icon-text" title="Porovnat dvě varianty vedle sebe nebo přes sebe">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 3 21 3 21 8"></polyline>
+            <line x1="4" y1="20" x2="21" y2="3"></line>
+            <polyline points="21 16 21 21 16 21"></polyline>
+            <line x1="15" y1="15" x2="21" y2="21"></line>
+            <line x1="4" y1="4" x2="9" y2="9"></line>
+          </svg>
+          <span>Porovnat varianty</span>
+        </button>
+
+        <!-- Exporty -->
+        <div class="dropdown">
+          <button id="btnExportMenu" class="btn btn-secondary btn-icon-text">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Exportovat</span>
+          </button>
+          <div class="dropdown-menu" id="exportDropdown">
+            <button class="dropdown-item" id="btnExportICal">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              Export do iCal (.ics kalendář)
+            </button>
+            <button class="dropdown-item" id="btnPrintSchedule">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+              Vytisknout / Uložit PDF
+            </button>
+            <button class="dropdown-item" id="btnExportJson">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              Zálohovat rozvrhy (JSON)
+            </button>
+            <label class="dropdown-item" style="cursor: pointer;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Obnovit ze souboru (JSON)
+              <input type="file" id="fileImportJson" accept=".json" style="display: none;">
+            </label>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item text-danger" id="btnResetData">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+              Obnovit ukázková data
+            </button>
+          </div>
+        </div>
+
+        <!-- Přepínač témat (Dark / Light) -->
+        <button id="btnThemeToggle" class="btn btn-icon" title="Přepnout tmavý / světlý režim">
+          <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+
+        <!-- Tlačítko přidat hodinu -->
+        <button id="btnOpenAddModal" class="btn btn-primary btn-icon-text">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Přidat předmět</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Lišta variant rozvrhu -->
+    <div class="variants-bar">
+      <div class="variants-tab-list" id="variantsTabContainer">
+        <!-- Sem se dynamicky renderují taby variant -->
+      </div>
+      
+      <div class="variants-controls">
+        <button id="btnNewVariant" class="btn btn-ghost btn-sm" title="Vytvořit novou prázdnou variantu">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Nová varianta
+        </button>
+        <button id="btnDuplicateVariant" class="btn btn-ghost btn-sm" title="Duplikovat stávající variantu pro vyzkoušení jiné paralelky">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          Duplikovat
+        </button>
+        <button id="btnRenameVariant" class="btn btn-ghost btn-sm" title="Přejmenovat aktuální variantu">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+          </svg>
+        </button>
+        <button id="btnDeleteVariant" class="btn btn-ghost btn-sm text-danger" title="Smazat tuto variantu">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Týdenní filtr: Sudé vs. Liché týdny (Zahájení 28.9. = Lichý) -->
+    <div class="week-filter-bar">
+      <div class="week-filter-group">
+        <span class="filter-label">Týden:</span>
+        <button class="btn-week-tab active" data-week="all" id="tabWeekAll">
+          <span>Všechny týdny (Přehled)</span>
+        </button>
+        <button class="btn-week-tab" data-week="odd" id="tabWeekOdd">
+          <span class="week-dot dot-odd"></span>
+          <span>Lichý týden</span>
+          <span class="badge-start-date">začíná 28. 9.</span>
+        </button>
+        <button class="btn-week-tab" data-week="even" id="tabWeekEven">
+          <span class="week-dot dot-even"></span>
+          <span>Sudý týden</span>
+          <span class="badge-start-date">od 5. 10.</span>
+        </button>
+      </div>
+
+      <div class="quick-helpers">
+        <button id="btnSyncFixed" class="btn btn-ghost btn-sm" title="Zkopíruje všechny předměty označené jako 'Pevný základ' do všech ostatních variant">
+          📌 Synchronizovat pevné předměty
+        </button>
+      </div>
+    </div>
+
+    <!-- Režim porovnání (lišta aktivního porovnání) -->
+    <div id="compareBar" class="compare-banner" style="display: none;">
+      <div class="compare-info">
+        <span class="compare-badge">Režim porovnání</span>
+        <span>Zobrazujete: <strong id="compareBaseName">Varianta A</strong> (plně barevně) vs. <strong id="compareOverlayName">Varianta B</strong> (čárkovaně)</span>
+      </div>
+      <div class="compare-controls">
+        <label for="compareSelect">Srovnat s:</label>
+        <select id="compareSelect" class="form-select"></select>
+        <button id="btnCloseCompare" class="btn btn-ghost btn-sm">Ukončit porovnání</button>
+      </div>
+    </div>
+
+    <!-- Přehledová statistika rozvrhu -->
+    <div class="schedule-stats-bar">
+      <div class="stat-card">
+        <span class="stat-label">Předmětů v rozvrhu</span>
+        <span class="stat-value" id="statSubjectCount">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Týdenní výuka</span>
+        <span class="stat-value" id="statTotalHours">0 h</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Kredity (odhad)</span>
+        <span class="stat-value" id="statTotalCredits">0 ECTS</span>
+      </div>
+      <div class="stat-card" id="statFreeDaysCard">
+        <span class="stat-label">Volné dny</span>
+        <span class="stat-value text-success" id="statFreeDays">Žádný</span>
+      </div>
+      <div class="stat-card" id="statConflictCard">
+        <span class="stat-label">Kolize / Překryvy</span>
+        <span class="stat-value" id="statConflicts">Bez kolizí ✓</span>
+      </div>
+    </div>
+
+    <!-- Hlavní kalendářová mřížka -->
+    <main class="schedule-wrapper" id="printableSchedule">
+      <!-- Nadpis pro tisk -->
+      <div class="print-only-header">
+        <h2 id="printVariantTitle">Varianta rozvrhu</h2>
+        <p>Vytištěno z aplikace VŠ Rozvrhář</p>
+      </div>
+
+      <div class="schedule-grid-container">
+        <!-- Časová hlavička (nahoře) -->
+        <div class="schedule-header-row">
+          <div class="corner-cell">
+            <span class="corner-hint">Čas / Den</span>
+          </div>
+          <div class="time-header-track" id="timeHeaderTrack">
+            <!-- Vygeneruje se v JS: 7:00, 8:00, 9:00, ... -->
+          </div>
+        </div>
+
+        <!-- Tělo mřížky (řádky pro dny v týdnu) -->
+        <div class="schedule-days-body" id="scheduleDaysBody">
+          <!-- Pondělí až Pátek vygeneruje JS -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Spodní rychlá legenda / přepínače zobrazení -->
+    <footer class="app-footer">
+      <div class="legend-items">
+        <span class="legend-item"><span class="legend-dot dot-lecture"></span> Přednáška (P)</span>
+        <span class="legend-item"><span class="legend-dot dot-seminar"></span> Cvičení / Seminář (C/S)</span>
+        <span class="legend-item"><span class="legend-dot dot-lab"></span> Laboratoř (L)</span>
+        <span class="legend-item"><span class="legend-dot dot-odd"></span> Pouze lichý týden</span>
+        <span class="legend-item"><span class="legend-dot dot-even"></span> Pouze sudý týden</span>
+        <span class="legend-item"><span class="legend-dot dot-conflict"></span> Detekovaná kolize</span>
+      </div>
+      <div class="footer-tips">
+        <span>💡 Tip: Semestr začíná 28. 9. jako lichý týden. Přednášky bývají oba týdny, cvičení lze volit lichý/sudý.</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- MODÁLNÍ DIALOG: Přidat / Upravit předmět -->
+  <div class="modal-backdrop" id="modalLesson" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalTitle">Přidat předmět do rozvrhu</h3>
+        <button class="btn-close" id="btnCloseModal" aria-label="Zavřít">&times;</button>
+      </div>
+      <form id="formLesson">
+        <input type="hidden" id="lessonId">
+
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label for="lessonName">Název předmětu *</label>
+            <input type="text" id="lessonName" class="form-input" placeholder="např. Matematická analýza 1" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="lessonCode">Kód předmětu</label>
+            <input type="text" id="lessonCode" class="form-input" placeholder="např. B0B01MA1">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="lessonType">Typ výuky *</label>
+            <select id="lessonType" class="form-select" required>
+              <option value="lecture">Přednáška (P)</option>
+              <option value="seminar" selected>Cvičení (C)</option>
+              <option value="lab">Laboratoř (L)</option>
+              <option value="other">Jiné</option>
+            </select>
+          </div>
+          <div class="form-group flex-1">
+            <label for="lessonCredits">Kredity (ECTS)</label>
+            <input type="number" id="lessonCredits" class="form-input" min="0" max="30" value="5" placeholder="5">
+          </div>
+          <div class="form-group flex-1">
+            <label for="lessonColor">Barva</label>
+            <div class="color-picker-wrapper">
+              <input type="color" id="lessonColor" class="color-input" value="#3b82f6">
+              <div class="color-presets" id="colorPresets">
+                <!-- Rychlé předvolby barev -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="lessonDay">Den v týdnu *</label>
+            <select id="lessonDay" class="form-select" required>
+              <option value="1">Pondělí</option>
+              <option value="2">Úterý</option>
+              <option value="3">Středa</option>
+              <option value="4">Čtvrtek</option>
+              <option value="5">Pátek</option>
+              <option value="6">Sobota</option>
+            </select>
+          </div>
+          <div class="form-group flex-1">
+            <label for="lessonStartTime">Začátek *</label>
+            <input type="time" id="lessonStartTime" class="form-input" value="09:00" step="300" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="lessonEndTime">Konec *</label>
+            <input type="time" id="lessonEndTime" class="form-input" value="10:30" step="300" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="lessonWeek">Periodicita výuky *</label>
+            <select id="lessonWeek" class="form-select" required>
+              <option value="both" selected>Každý týden (oba týdny)</option>
+              <option value="odd">Pouze LICHÝ týden (od 28. 9.)</option>
+              <option value="even">Pouze SUDÝ týden (od 5. 10.)</option>
+            </select>
+          </div>
+          <div class="form-group flex-1" style="justify-content: center;">
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 8px; margin-top: 22px;">
+              <input type="checkbox" id="lessonIsFixed" style="width: 18px; height: 18px; accent-color: var(--accent-primary); cursor: pointer;">
+              <span><strong>Pevný předmět</strong> (povinný základ)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="lessonRoom">Místnost / Učebna</label>
+            <input type="text" id="lessonRoom" class="form-input" placeholder="např. KN:E-107 / T9:105">
+          </div>
+          <div class="form-group flex-1">
+            <label for="lessonTeacher">Vyučující</label>
+            <input type="text" id="lessonTeacher" class="form-input" placeholder="např. doc. Ing. Jan Novák, Ph.D.">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="lessonNote">Poznámka / Skupina (např. paralelka 104, lichý týden...)</label>
+          <input type="text" id="lessonNote" class="form-input" placeholder="např. Paralelka 102 - doporučeno">
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="btnCancelModal">Zrušit</button>
+          <button type="button" class="btn btn-danger-outline" id="btnDeleteLesson" style="display: none; margin-right: auto;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            Smazat
+          </button>
+          <button type="submit" class="btn btn-primary" id="btnSaveLesson">Uložit do rozvrhu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODÁLNÍ DIALOG: Přejmenování varianty -->
+  <div class="modal-backdrop" id="modalRenameVariant" style="display: none;">
+    <div class="modal-card modal-sm">
+      <div class="modal-header">
+        <h3>Přejmenovat variantu</h3>
+        <button class="btn-close" id="btnCloseRenameModal">&times;</button>
+      </div>
+      <form id="formRenameVariant">
+        <div class="form-group">
+          <label for="renameVariantInput">Název varianty</label>
+          <input type="text" id="renameVariantInput" class="form-input" required maxlength="40">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="btnCancelRenameModal">Zrušit</button>
+          <button type="submit" class="btn btn-primary">Přejmenovat</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast kontejner pro notifikace -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Skripty -->
+  <script src="js/sample-data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/schedule.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
